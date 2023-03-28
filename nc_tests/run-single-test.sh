@@ -15,7 +15,10 @@ log() {
     >&2 echo $1
 }
 
-blob=$(head -c "$3" /dev/urandom | base64 -w0)
+# First `head` gets N random bytes. Base64 adds a little overhead
+# for padding. Second `head` ensures that we don't send more than N 
+# bytes.
+blob=$(head -c "$3" /dev/urandom | base64 -w0 | head -c $3)
 result=$(echo $blob | nc $1 $2)
 
 if [[ "$result" == "$blob" ]]; then
