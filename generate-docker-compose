@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+import sys
+
+
+BASE_TEMPLATE = """
+version: '3.9'
+name: tp0
+services:
+  server:
+    container_name: server
+    image: server:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+    networks:
+      - testing_net
+  {clients_block}
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.125.0/24
+"""
+
+CLIENT_TEMPLATE = """
+  client{client_number}:
+    container_name: client{client_number}
+    image: client:latest
+    entrypoint: /client
+    environment:
+      - CLI_ID={client_number}
+      - CLI_LOG_LEVEL=DEBUG
+    networks:
+      - testing_net
+    depends_on:
+      - server
+"""
+
+
+def generate_file(n_clients):
+    clients = [CLIENT_TEMPLATE.format(client_number=i).rstrip() for i in range(1, n_clients + 1)]
+    return BASE_TEMPLATE.format(clients_block="\n".join(clients)).strip()
+
+
+def main():
+    if len(sys.argv) != 2 or not sys.argv[1].isdecimal():
+        print(f"Usage: {sys.argv[0]} <N_CLIENTS>", file=sys.stderr)
+        return 1
+
+    print(generate_file(int(sys.argv[1])))
+    return 0
+
+
+if __name__ == "__main__":
+    exit(main())
