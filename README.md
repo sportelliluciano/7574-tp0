@@ -3,12 +3,7 @@
 Para correr los tests con netcat, se provee un nuevo target en el `Makefile`: `nc_tests`.
 
 Los tests a ejecutar envían blobs de caracteres ASCII al servidor de tamaños 8, 16, 32, 64, 
-128, 256, 512, 1024, 2048, 4096 y 8192. Se decidió testear hasta 8192 ya que en la parte dos
-se indica que el límite para el tamaño del payload es de 8KB.
-
-> Es muy probable que los tests con tamaños mas grandes (usualmente >1024) fallen, ya que ni 
-el servidor ni el cliente contemplan al momento de este ejercicio las short-reads ni las 
-short-writes.
+128, 256.
 
 Ejemplo:
 
