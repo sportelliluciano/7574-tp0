@@ -2,8 +2,7 @@
 
 Para correr los tests con netcat, se provee un nuevo target en el `Makefile`: `nc_tests`.
 
-Los tests a ejecutar envían blobs de caracteres ASCII al servidor de tamaños 8, 16, 32, 64, 
-128, 256.
+Los tests a ejecutar envían blobs de caracteres ASCII al servidor de tamaños 8, 16, 32, 64, 128 y 256.
 
 Ejemplo:
 
