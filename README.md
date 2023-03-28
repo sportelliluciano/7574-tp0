@@ -1,3 +1,22 @@
+# Ejercicio 1.1 | Generador de Docker Compose con N clientes
+
+Para ejecutar el generador, se debe correr el siguiente comando:
+
+```bash
+$ ./generate-docker-compose <N_CLIENTES>
+```
+
+Donde `N_CLIENTES` es la cantidad de clientes que tendrá el archivo generado.
+
+El resultado se emitirá por la salida estándar. Para guardarlo a un archivo, se puede
+aprovechar la redirección de la terminal:
+
+```bash
+$ ./generate-docker-compose 5 > docker-compose-with-5-clients.yaml
+```
+
+
+--
 # TP0: Docker + Comunicaciones + Concurrencia
 
 En el presente repositorio se provee un ejemplo de cliente-servidor el cual corre en containers con la ayuda de [docker-compose](https://docs.docker.com/compose/). El mismo es un ejemplo práctico brindado por la cátedra para que los alumnos tengan un esqueleto básico de cómo armar un proyecto de cero en donde todas las dependencias del mismo se encuentren encapsuladas en containers. El cliente (Golang) y el servidor (Python) fueron desarrollados en diferentes lenguajes simplemente para mostrar cómo dos lenguajes de programación pueden convivir en el mismo proyecto con la ayuda de containers.

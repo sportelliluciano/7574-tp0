@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+# Script to generate a Docker Compose file with N clients.
+#
+# Usage:
+#  ./generate-docker-compose <N_CLIENTS>
+#
+# Example: ./generate-docker-compose 3
+#
+# Output will be printed to stdout.
+
 import sys
 
 
@@ -42,7 +51,10 @@ CLIENT_TEMPLATE = """
 
 
 def generate_file(n_clients):
-    clients = [CLIENT_TEMPLATE.format(client_number=i).rstrip() for i in range(1, n_clients + 1)]
+    clients = [
+        CLIENT_TEMPLATE.format(client_number=i).rstrip()
+        for i in range(1, n_clients + 1)
+    ]
     return BASE_TEMPLATE.format(clients_block="\n".join(clients)).strip()
 
 
