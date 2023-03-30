@@ -2,7 +2,7 @@ Hipótesis y supuestos:
  - Los paquetes no pueden tener más de 8KB de largo
  - Se puede mandar más de una apuesta por request
  - El número a jugar siempre está entre 0000 y 9999.
- - Los nombres se codifican en UTF-8, y como máximo pueden tener hasta 100 caracteres.
+ - Los nombres se codifican en UTF-8, y como máximo pueden tener hasta 30 caracteres.
  - El documento es un número entero en el rango [0, 4.294.967.295].
  - El encoding a utilizar es "network endian" (big endian).
  - Se asume que el año de nacimiento está entre 0000 y 9999
@@ -32,6 +32,9 @@ APUESTA (Tag code = 0b001):
     nombre: utf8strz,
     apellido: utf8strz,
 ```
+
+MAX_SIZE(APUESTA) = 1 + 2 + 4 + 2 + 1 + 1 + 30 * 4 + 1 + 30 * 4 + 1 = 253 bytes
+MAX APUESTAS POR BATCH: floor(8192 / 253) = 32
 
 ```
 BATCH (Tag code = 0b010):

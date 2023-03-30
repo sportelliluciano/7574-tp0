@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const MAX_STR_LEN = 30
+
 type Bet struct {
 	Agency      uint8
 	Name        string
@@ -36,6 +38,10 @@ func NewBet(Agency uint8, Name string, LastName string, Id uint32, DateOfBirth s
 	day, err := strconv.ParseUint(dateParts[2], 10, 8)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(Name) > MAX_STR_LEN || len(LastName) > MAX_STR_LEN {
+		return nil, errors.New("max string length is 30 characters")
 	}
 
 	return &Bet{

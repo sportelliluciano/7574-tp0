@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common"
-	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/models"
 	lottery "github.com/7574-sistemas-distribuidos/docker-compose-init/client/services"
 )
 
@@ -37,6 +36,7 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("loop", "period")
 	v.BindEnv("loop", "lapse")
 	v.BindEnv("log", "level")
+	v.BindEnv("betsPerBatch", "betsPerBatch")
 
 	// Bet info
 	v.BindEnv("name", "name")
@@ -87,19 +87,14 @@ func InitLogger(logLevel string) error {
 // PrintConfig Print all the configuration parameters of the program.
 // For debugging purposes only
 func PrintConfig(v *viper.Viper) {
-	logrus.Infof("action: config | result: success | client_id: %s | server_address: %s | loop_lapse: %v | loop_period: %v | log_level: %s",
+	logrus.Infof("action: config | result: success | client_id: %s | server_address: %s | loop_lapse: %v | loop_period: %v | log_level: %s | bets_per_batch: %s | batch_file_path: %s",
 		v.GetString("id"),
 		v.GetString("server.address"),
 		v.GetDuration("loop.lapse"),
 		v.GetDuration("loop.period"),
 		v.GetString("log.level"),
-	)
-	logrus.Infof("action: config_bet | result: success | name: %s | last_name: %s | idcard: %d | birthdate: %s | betnumber: %d",
-		v.GetString("name"),
-		v.GetString("lastName"),
-		v.GetUint("idCard"),
-		v.GetString("birthdate"),
-		v.GetUint("betNumber"),
+		v.GetString("betsPerBatch"),
+		v.GetString("batchFilePath"),
 	)
 }
 
@@ -116,19 +111,6 @@ func main() {
 	// Print program config with debugging purposes
 	PrintConfig(v)
 
-	bet, err := models.NewBet(
-		uint8(v.GetUint64("id")),
-		v.GetString("name"),
-		v.GetString("lastName"),
-		uint32(v.GetUint64("idCard")),
-		v.GetString("birthdate"),
-		uint16(v.GetUint64("betNumber")),
-	)
-
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
-
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
 		ID:            v.GetString("id"),
@@ -138,17 +120,16 @@ func main() {
 
 	client := common.NewClient(clientConfig)
 	log.Infof("action: create_client | result: in_progress")
-	lottery, err := lottery.NewLotteryService(client)
+	lottery, err := lottery.NewLotteryService(client, uint8(v.GetUint64("id")), uint16(v.GetUint64("betsPerBatch")))
 	if err != nil {
 		log.Fatalf("action: create_client | result: fail | err: %v", err)
 	}
 	log.Infof("action: create_client | result: success")
 
-	log.Infof("action: store_bet | result: in_progress | dni: %d | numero: %d", bet.Id, bet.NumberToBet)
-	err = lottery.StoreBet(bet)
+	log.Infof("action: send_batch | result: in_progress")
+	err = lottery.SendBatch(v.GetString("batchFilePath"))
 	if err != nil {
-		log.Infof("action: store_bet | result: fail | dni: %d | numero: %d | err: %v", bet.Id, bet.NumberToBet, err)
+		log.Infof("action: send_batch | result: fail | err: %v", err)
 	}
-	log.Infof("action: store_bet | result: success | dni: %d | numero: %d", bet.Id, bet.NumberToBet)
-	log.Infof("action: apuesta_enviada | result: success | dni: %d | numero: %d", bet.Id, bet.NumberToBet)
+	log.Infof("action: send_batch | result: success")
 }

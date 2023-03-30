@@ -8,7 +8,8 @@ import (
 type CommandTag uint8
 
 const (
-	StoreBet CommandTag = 0b001
+	StoreBet   CommandTag = 0b001
+	StoreBatch CommandTag = 0b010
 )
 
 type Command interface {
