@@ -1,28 +1,37 @@
+import signal
 import socket
 import logging
+
+from common.client_handler import ClientHandler
 
 
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._server_socket.bind(('', port))
+        self._server_socket.bind(("", port))
         self._server_socket.listen(listen_backlog)
+        self._graceful_quit = False
+        signal.signal(signal.SIGTERM, self.__handle_sigterm)
 
     def run(self):
         """
-        Dummy Server loop
+        Server loop.
 
-        Server that accept a new connections and establishes a
-        communication with a client. After client with communucation
-        finishes, servers starts to accept new connections again
+        Waits for new connections and handles clients sequentially.
         """
+        while not self._graceful_quit:
+            try:
+                client_sock = self.__accept_new_connection()
+                self.__handle_client_connection(client_sock)
+            except OSError:
+                if self._graceful_quit:
+                    logging.info(f"action: graceful_quit | result: success")
+                    return
 
-        # TODO: Modify this program to handle signal to graceful shutdown
-        # the server
-        while True:
-            client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
+                # If we're not in the middle of a graceful shutdown then
+                # something bad may have happened -- rethrow exception.
+                raise
 
     def __handle_client_connection(self, client_sock):
         """
@@ -32,14 +41,12 @@ class Server:
         client socket will also be closed
         """
         try:
-            # TODO: Modify the receive to avoid short-reads
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
-            addr = client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # TODO: Modify the send to avoid short-writes
-            client_sock.send("{}\n".format(msg).encode('utf-8'))
+            logging.info("action: client_handler | result: in_progress")
+            handler = ClientHandler(client_sock)
+            handler.run()
+            logging.info("action: client_handler | result: success")
         except OSError as e:
-            logging.error("action: receive_message | result: fail | error: {e}")
+            logging.error(f"action: client_handler | result: fail | error: {e}")
         finally:
             client_sock.close()
 
@@ -52,7 +59,12 @@ class Server:
         """
 
         # Connection arrived
-        logging.info('action: accept_connections | result: in_progress')
+        logging.info("action: accept_connections | result: in_progress")
         c, addr = self._server_socket.accept()
-        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
+        logging.info(f"action: accept_connections | result: success | ip: {addr[0]}")
         return c
+
+    def __handle_sigterm(self, *_):
+        logging.info(f"action: sigterm | result: success")
+        self._graceful_quit = True
+        self._server_socket.close()
