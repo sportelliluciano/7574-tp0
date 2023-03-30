@@ -1,7 +1,7 @@
 import logging
 
 from common.net_reader_writer import NetReaderWriter
-from common.utils import Bet, has_won, load_bets, store_bets
+from common.utils import Bet
 from protocol.command import CommandTag
 from protocol.eof import EofCommand
 from protocol.lottery_stream import LotteryStream

@@ -2,10 +2,10 @@ import logging
 import multiprocessing as mp
 
 
-from common.bet_server import BetEofCmd, BetStoreBatchCmd, BetWinnersCmd
+from .bet_command import BetEofCmd, BetStoreBatchCmd, BetWinnersCmd
 
 
-class BetServerFacade:
+class BetServerProxy:
     def __init__(self):
         rx, peer = mp.Pipe(duplex=True)
         self.rx = rx
