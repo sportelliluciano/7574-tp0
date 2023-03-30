@@ -25,16 +25,7 @@ func NewLotteryService(client *common.Client, agencyId uint8, betsPerBatch uint1
 
 func (l *LotteryService) StoreBet(bet *models.Bet) error {
 	cmd := protocol.NewStoreBetCommand(bet)
-	response, err := l.client.SendCommand(&cmd)
-	if err != nil {
-		return err
-	}
-
-	if response.IsSuccess() {
-		return nil
-	}
-
-	return errors.New(response.ErrorMessage())
+	return l.sendCommand(&cmd)
 }
 
 func (l *LotteryService) SendBatch(path string) error {
@@ -63,14 +54,29 @@ func (l *LotteryService) SendBatch(path string) error {
 			}
 		}
 
-		response, err := l.client.SendCommand(&batch)
+		err = l.sendCommand(&batch)
 		if err != nil {
 			return err
 		}
-
-		if !response.IsSuccess() {
-			return errors.New(response.ErrorMessage())
-		}
 	}
-	return nil
+
+	return l.sendEof()
+}
+
+func (l *LotteryService) sendEof() error {
+	cmd := protocol.NewEofCommand(l.ID)
+	return l.sendCommand(&cmd)
+}
+
+func (l *LotteryService) sendCommand(cmd protocol.Command) error {
+	response, err := l.client.SendCommand(cmd)
+	if err != nil {
+		return err
+	}
+
+	if response.IsSuccess() {
+		return nil
+	}
+
+	return errors.New(response.ErrorMessage())
 }

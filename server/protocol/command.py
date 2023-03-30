@@ -7,6 +7,7 @@ from dataclasses import dataclass
 class CommandTag(Enum):
     STORE_BET = 0b001
     SEND_BATCH = 0b010
+    EOF = 0b011
 
 
 @dataclass

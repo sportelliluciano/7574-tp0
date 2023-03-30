@@ -10,6 +10,7 @@ type CommandTag uint8
 const (
 	StoreBet   CommandTag = 0b001
 	StoreBatch CommandTag = 0b010
+	Eof        CommandTag = 0b011
 )
 
 type Command interface {

@@ -3,6 +3,7 @@ import logging
 from common.net_reader_writer import NetReaderWriter
 from common.utils import Bet, store_bets
 from protocol.command import CommandTag
+from protocol.eof import EofCommand
 from protocol.lottery_stream import LotteryStream
 from protocol.response import Response
 from protocol.store_bet import StoreBetCommand
@@ -15,6 +16,7 @@ class ClientHandler:
         self.commands = {
             CommandTag.STORE_BET: self._store_bet,
             CommandTag.SEND_BATCH: self._send_batch,
+            CommandTag.EOF: self._eof,
         }
 
     def run(self):
@@ -54,6 +56,11 @@ class ClientHandler:
         logging.info("action: store_batch | result: in_progress")
         store_bets([self.__create_bet(store_bet_data) for store_bet_data in batch.bets])
         logging.info("action: store_batch | result: success")
+        return Response.ok()
+
+    def _eof(self, raw_command):
+        eof = EofCommand.from_raw(raw_command)
+        logging.info("action: agency_eof | result: success | agency_id: %d", eof.agency)
         return Response.ok()
 
     def __create_bet(self, store_bet_data):
