@@ -3,6 +3,7 @@ import socket
 import logging
 
 from common.client_handler import ClientHandler
+from common.storage import Storage
 
 
 class Server:
@@ -13,6 +14,7 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self._graceful_quit = False
         signal.signal(signal.SIGTERM, self.__handle_sigterm)
+        self._storage = Storage(open_agencies={i for i in range(1, 6)}, winners=None)
 
     def run(self):
         """
@@ -42,7 +44,7 @@ class Server:
         """
         try:
             logging.info("action: client_handler | result: in_progress")
-            handler = ClientHandler(client_sock)
+            handler = ClientHandler(client_sock, self._storage)
             handler.run()
             logging.info("action: client_handler | result: success")
         except OSError as e:

@@ -129,7 +129,13 @@ func main() {
 	log.Infof("action: send_batch | result: in_progress")
 	err = lottery.SendBatch(v.GetString("batchFilePath"))
 	if err != nil {
-		log.Infof("action: send_batch | result: fail | err: %v", err)
+		log.Fatalf("action: send_batch | result: fail | err: %v", err)
 	}
 	log.Infof("action: send_batch | result: success")
+	log.Infof("action: winners | result: in_progress")
+	winners, err := lottery.Winners()
+	if err != nil {
+		log.Fatalf("action: winners | result: fail | err: %v", err)
+	}
+	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %d", len(winners))
 }
