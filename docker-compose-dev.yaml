@@ -5,15 +5,11 @@ services:
     container_name: server
     image: server:latest
     entrypoint: python3 /main.py
-    volumes:
-      - ./bets.csv:/bets.csv
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
-    ports:
-      - 12345:12345
   
   client1:
     container_name: client1
