@@ -11,6 +11,17 @@ services:
     networks:
       - testing_net
 
+  nc_tests:
+    build:
+      context: ./nc_tests
+    profiles:
+      - nc_tests
+    environment:
+      - SERVER_HOST=server
+      - SERVER_PORT=12345
+    networks:
+      - testing_net
+
   client1:
     container_name: client1
     image: client:latest

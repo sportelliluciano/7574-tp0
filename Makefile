@@ -37,3 +37,11 @@ docker-compose-down:
 docker-compose-logs:
 	docker compose -f docker-compose-dev.yaml logs -f
 .PHONY: docker-compose-logs
+
+
+nc_tests:
+	docker compose -f docker-compose-dev.yaml up server -d --build
+	docker compose -f docker-compose-dev.yaml --profile nc_tests up nc_tests --build
+	docker compose -f docker-compose-dev.yaml --profile nc_tests rm -fsv nc_tests
+	@echo "Tests finished. Use make docker-compose-down to stop the server."
+.PHONY: nc_tests
