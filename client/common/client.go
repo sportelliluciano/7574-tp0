@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"time"
+	"os"
+	"os/signal"
+	"time"	
+	"syscall"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -53,10 +56,20 @@ func (c *Client) StartClientLoop() {
 	// autoincremental msgID to identify every message sent
 	msgID := 1
 
+	// Catch SIGTERM through a channel
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGTERM)
+
+
 loop:
 	// Send messages if the loopLapse threshold has not been surpassed
 	for timeout := time.After(c.config.LoopLapse); ; {
 		select {
+		case <-sigterm:
+			log.Infof("action: sigterm | result: success | client_id: %v",
+                c.config.ID,
+            )
+			break loop
 		case <-timeout:
 	        log.Infof("action: timeout_detected | result: success | client_id: %v",
                 c.config.ID,
