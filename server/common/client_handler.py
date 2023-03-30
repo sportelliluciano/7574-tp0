@@ -1,7 +1,7 @@
 import logging
 
 from common.net_reader_writer import NetReaderWriter
-from common.utils import Bet, has_won, load_bets, store_bets
+from common.utils import Bet
 from protocol.command import CommandTag
 from protocol.eof import EofCommand
 from protocol.lottery_stream import LotteryStream
@@ -12,7 +12,7 @@ from protocol.winners import WinnersCommand, WinnersResponse
 
 
 class ClientHandler:
-    def __init__(self, connection, storage):
+    def __init__(self, connection, bet_server):
         self.stream = LotteryStream(NetReaderWriter(connection))
         self.commands = {
             CommandTag.STORE_BET: self._store_bet,
@@ -20,7 +20,7 @@ class ClientHandler:
             CommandTag.EOF: self._eof,
             CommandTag.WINNERS: self._winners,
         }
-        self.storage = storage
+        self.bet_server = bet_server
 
     def run(self):
         logging.info("action: read_command | result: in_progress")
@@ -52,19 +52,21 @@ class ClientHandler:
         logging.info("action: store_bet | result: success | bet: %r", store_bet_data)
         bet = self.__create_bet(store_bet_data)
         logging.info("action: construct_bet | result: success | bet: %r", bet)
-        store_bets([bet])
+        self.bet_server.store_bets([bet])
         return Response.ok()
 
     def _send_batch(self, raw_command):
         batch = SendBatchCommand.from_raw(raw_command)
         logging.info("action: store_batch | result: in_progress")
-        store_bets([self.__create_bet(store_bet_data) for store_bet_data in batch.bets])
+        self.bet_server.store_bets(
+            [self.__create_bet(store_bet_data) for store_bet_data in batch.bets]
+        )
         logging.info("action: store_batch | result: success")
         return Response.ok()
 
     def _eof(self, raw_command):
         eof = EofCommand.from_raw(raw_command)
-        self.storage.open_agencies.discard(eof.agency)
+        self.bet_server.eof(eof.agency)
         logging.info(
             "action: agency_eof | result: success | agency_id: %d",
             eof.agency,
@@ -73,18 +75,10 @@ class ClientHandler:
 
     def _winners(self, raw_command):
         _ = WinnersCommand.from_raw(raw_command)
-        if len(self.storage.open_agencies) != 0:
+        winners = self.bet_server.winners()
+        if winners is None:
             return WinnersResponse.error("No results yet.")
-
-        if self.storage.winners is None:
-            logging.info("action: sorteo | result: success")
-            bets = load_bets()
-            self.storage.winners = [bet.document for bet in filter(has_won, bets)]
-
-        logging.info(
-            "action: winners | result: success | winners: %d", len(self.storage.winners)
-        )
-        return WinnersResponse.ok(self.storage.winners)
+        return WinnersResponse.ok(winners)
 
     def __create_bet(self, store_bet_data):
         return Bet(
