@@ -1,12 +1,18 @@
 import struct
 
+from dataclasses import dataclass
+
 from protocol.response import Response, StatusCode
 
 
+@dataclass
 class WinnersCommand:
     @staticmethod
-    def from_raw(_):
-        return WinnersCommand()
+    def from_raw(raw_command):
+        agency_id = int(raw_command.payload[0])
+        return WinnersCommand(agency_id)
+
+    agency_id: int
 
 
 class WinnersResponse:

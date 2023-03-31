@@ -25,8 +25,8 @@ class BetServerProxy:
     def store_bets(self, bets):
         return self._send_cmd(BetStoreBatchCmd(bets))
 
-    def winners(self):
-        return self._send_cmd(BetWinnersCmd())
+    def winners(self, agency_id):
+        return self._send_cmd(BetWinnersCmd(agency_id))
 
     def eof(self, agency_id):
         return self._send_cmd(BetEofCmd(agency_id))

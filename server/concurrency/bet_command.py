@@ -7,8 +7,11 @@ class BetStoreBatchCmd:
 
 
 class BetWinnersCmd:
+    def __init__(self, agency_id):
+        self.agency_id = agency_id
+    
     def apply(self, bs):
-        return bs.winners()
+        return bs.winners(self.agency_id)
 
 
 class BetEofCmd:

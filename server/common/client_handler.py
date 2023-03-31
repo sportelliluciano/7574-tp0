@@ -74,8 +74,8 @@ class ClientHandler:
         return Response.ok()
 
     def _winners(self, raw_command):
-        _ = WinnersCommand.from_raw(raw_command)
-        winners = self.bet_server.winners()
+        cmd = WinnersCommand.from_raw(raw_command)
+        winners = self.bet_server.winners(cmd.agency_id)
         if winners is None:
             return WinnersResponse.error("No results yet.")
         return WinnersResponse.ok(winners)
