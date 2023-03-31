@@ -72,19 +72,23 @@ class ClientHandler:
         return Response.ok()
 
     def _winners(self, raw_command):
-        _ = WinnersCommand.from_raw(raw_command)
+        cmd = WinnersCommand.from_raw(raw_command)
         if len(self.storage.open_agencies) != 0:
             return WinnersResponse.error("No results yet.")
 
         if self.storage.winners is None:
             logging.info("action: sorteo | result: success")
             bets = load_bets()
-            self.storage.winners = [bet.document for bet in filter(has_won, bets)]
+            self.storage.winners = {}
+            for bet in filter(has_won, bets):
+                winners = self.storage.winners.get(bet.agency, [])
+                winners.append(bet.document)
+                self.storage.winners[bet.agency] = winners
 
         logging.info(
-            "action: winners | result: success | winners: %d", len(self.storage.winners)
+            "action: winners | result: success | winners: %d", len(self.storage.winners.get(cmd.agency_id, []))
         )
-        return WinnersResponse.ok(self.storage.winners)
+        return WinnersResponse.ok(self.storage.winners.get(cmd.agency_id, []))
 
     def __create_bet(self, store_bet_data):
         return Bet(
