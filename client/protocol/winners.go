@@ -2,14 +2,16 @@ package protocol
 
 import "encoding/binary"
 
-type WinnersCommand struct{}
+type WinnersCommand struct {
+	AgencyId uint8
+}
 
 func NewWinnersCommand(agencyId uint8) WinnersCommand {
-	return WinnersCommand{}
+	return WinnersCommand{AgencyId: agencyId}
 }
 
 func (c *WinnersCommand) Serialize() ([]byte, error) {
-	return SerializeCommand(Winners, []byte{})
+	return SerializeCommand(Winners, []byte{c.AgencyId})
 }
 
 type WinnersResponse struct {
