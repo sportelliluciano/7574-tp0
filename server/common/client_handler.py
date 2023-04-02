@@ -1,21 +1,26 @@
 import logging
 
 from common.net_reader_writer import NetReaderWriter
-from common.utils import Bet, store_bets
+from common.utils import Bet, has_won, load_bets, store_bets
 from protocol.command import CommandTag
+from protocol.eof import EofCommand
 from protocol.lottery_stream import LotteryStream
 from protocol.response import Response
 from protocol.store_bet import StoreBetCommand
 from protocol.send_batch import SendBatchCommand
+from protocol.winners import WinnersCommand, WinnersResponse
 
 
 class ClientHandler:
-    def __init__(self, connection):
+    def __init__(self, connection, storage):
         self.stream = LotteryStream(NetReaderWriter(connection))
         self.commands = {
             CommandTag.STORE_BET: self._store_bet,
             CommandTag.SEND_BATCH: self._send_batch,
+            CommandTag.EOF: self._eof,
+            CommandTag.WINNERS: self._winners,
         }
+        self.storage = storage
 
     def run(self):
         logging.info("action: read_command | result: in_progress")
@@ -40,6 +45,7 @@ class ClientHandler:
                 command.header.tag,
                 command.header.length,
             )
+            self.stream.write_response(Response.error("Invalid tag"))
 
     def _store_bet(self, raw_command):
         store_bet_data = StoreBetCommand.from_raw(raw_command)
@@ -55,6 +61,30 @@ class ClientHandler:
         store_bets([self.__create_bet(store_bet_data) for store_bet_data in batch.bets])
         logging.info("action: store_batch | result: success")
         return Response.ok()
+
+    def _eof(self, raw_command):
+        eof = EofCommand.from_raw(raw_command)
+        self.storage.open_agencies.discard(eof.agency)
+        logging.info(
+            "action: agency_eof | result: success | agency_id: %d",
+            eof.agency,
+        )
+        return Response.ok()
+
+    def _winners(self, raw_command):
+        _ = WinnersCommand.from_raw(raw_command)
+        if len(self.storage.open_agencies) != 0:
+            return WinnersResponse.error("No results yet.")
+
+        if self.storage.winners is None:
+            logging.info("action: sorteo | result: success")
+            bets = load_bets()
+            self.storage.winners = [bet.document for bet in filter(has_won, bets)]
+
+        logging.info(
+            "action: winners | result: success | winners: %d", len(self.storage.winners)
+        )
+        return WinnersResponse.ok(self.storage.winners)
 
     def __create_bet(self, store_bet_data):
         return Bet(
